@@ -3,22 +3,23 @@ import { useEffect, useState } from "react";
 
 
 /**
- * Timer component
+ * Timer components
  *
  * @param callback: timer callback
- * @param delay: initial delay, in seconds
- * @param autostart: should timer start automatically?
+ * @param int duration: initial timer duration, in seconds
+ * @param int remaining: remaining timer duration, in seconds
+ * @param boolean autostart: should timer start automatically?
  * @constructor
  */
 
 class Timer {
 
-    constructor(callback, delay, autostart=true) {
+    constructor(callback, duration, remaining, autostart=true) {
         this._callback = callback;
         this._tid = null;
         this._started = null;
-        this._delay = delay;
-        this._remaining = delay;
+        this._duration = duration;
+        this._remaining = remaining;
         this._ending = null;
         this._paused = true;
         if (autostart) {
@@ -36,6 +37,7 @@ class Timer {
             this._started = new Date();
             this._ending = this._started.getTime() + this._remaining;
             this._tid = setTimeout(() => this.call.apply(this), this._remaining);
+            this._paused = false;
         }
     }
 
@@ -59,7 +61,7 @@ class Timer {
         }
         this._started = null;
         this._ending = null;
-        this._remaining = this._delay;
+        this._remaining = this._duration;
         this._paused = false;
     }
 
@@ -77,10 +79,14 @@ class Timer {
 
 let _timer = null;
 
-const useTimer = (callback, delay, refresh=null, interval=1000) => {
+const useTimer = (callback, duration, remaining, refresh=null, interval=1000) => {
 
     if (_timer === null) {
-        _timer = new Timer(callback, delay);
+        _timer = new Timer(callback, duration, remaining, false);
+    } else {
+        _timer._callback = callback;
+        _timer._duration = duration;
+        _timer._remaining = remaining;
     }
     const [timer, setTimer] = useState(_timer);
 

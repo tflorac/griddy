@@ -54,6 +54,7 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>SyneMono-Regular.ttf</string>
+		<string>Syne Mono.ttf</string>
 	</array>
 </dict>
 </plist>

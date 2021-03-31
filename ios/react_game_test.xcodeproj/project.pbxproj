@@ -16,6 +16,7 @@
 		B567E6F8BB20451F962A143D /* Trendy University.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AC246E5CE87548E287B76B46 /* Trendy University.ttf */; };
 		8225356A0C144E1698823441 /* Trendy_University.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D55E3397F3C145BF8A003569 /* Trendy_University.ttf */; };
 		A1E39131F0C143E6A713F286 /* SyneMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0D9249829B4F43238593EACF /* SyneMono-Regular.ttf */; };
+		3666962D28DE413A94ED7914 /* Syne Mono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BA357170873A4D36BBA2900A /* Syne Mono.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +45,7 @@
 		AC246E5CE87548E287B76B46 /* Trendy University.ttf */ = {isa = PBXFileReference; name = "Trendy University.ttf"; path = "../assets/fonts/Trendy University.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		D55E3397F3C145BF8A003569 /* Trendy_University.ttf */ = {isa = PBXFileReference; name = "Trendy_University.ttf"; path = "../assets/fonts/Trendy_University.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		0D9249829B4F43238593EACF /* SyneMono-Regular.ttf */ = {isa = PBXFileReference; name = "SyneMono-Regular.ttf"; path = "../assets/fonts/SyneMono-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		BA357170873A4D36BBA2900A /* Syne Mono.ttf */ = {isa = PBXFileReference; name = "Syne Mono.ttf"; path = "../assets/fonts/Syne Mono.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -140,6 +142,7 @@
 				AC246E5CE87548E287B76B46 /* Trendy University.ttf */,
 				D55E3397F3C145BF8A003569 /* Trendy_University.ttf */,
 				0D9249829B4F43238593EACF /* SyneMono-Regular.ttf */,
+				BA357170873A4D36BBA2900A /* Syne Mono.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -239,6 +242,7 @@
 				B567E6F8BB20451F962A143D /* Trendy University.ttf in Resources */,
 				8225356A0C144E1698823441 /* Trendy_University.ttf in Resources */,
 				A1E39131F0C143E6A713F286 /* SyneMono-Regular.ttf in Resources */,
+				3666962D28DE413A94ED7914 /* Syne Mono.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

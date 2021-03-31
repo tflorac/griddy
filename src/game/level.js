@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import {
     Button,
     StatusBar,
@@ -12,18 +12,18 @@ import {
 
 import { GameEngine } from "react-native-game-engine";
 
-import { STATES } from "./constants";
-import { baseX, baseY, cellSize, getCells } from "./Cell";
-import { useTimer } from "./Timer";
-import Score from "./Score";
+import _ from "lodash";
 
-import config from "./config.json"
+import { STATES } from "../constants";
+import { StylesContext } from "../styles";
 
+import { baseX, baseY, cellSize, getCells } from "./cell";
 
-const LEVEL_SIZE = config.size;
+import Timer from "../components/timer";
+import { useTimer } from "./timer";
 
-let CELLS_COUNT = LEVEL_SIZE * LEVEL_SIZE;
-let map = [...Array(CELLS_COUNT)];
+import Score from "../components/score";
+import { addHighScore } from "./score";
 
 
 /**
@@ -31,7 +31,11 @@ let map = [...Array(CELLS_COUNT)];
  *
  * @returns {{value, selected: boolean}[]}
  */
-const getLevel = () => {
+const getLevel = (config) => {
+
+    const LEVEL_SIZE = config.size;
+    const CELLS_COUNT = LEVEL_SIZE * LEVEL_SIZE;
+
     return Array.from({ length: CELLS_COUNT }, () => {
         return {
             value: Math.floor(Math.random() * 9) + 1,
@@ -40,42 +44,30 @@ const getLevel = () => {
     });
 };
 
+
+/**
+ * Global game variables
+ */
+
 let engine = null;
-let level = getLevel();
+let level = null;
 let entities = null;
 let timer = null;
 
 let selected = [];
 let firstCell, lastCell;
 
-let score, setScore;  // score state
+let score, setScore;          // score state
 let remaining, setRemaining;  // remaining time
 
 
 /**
- * Main game component
+ * Main game components
  *
  * @returns {JSX.Element}
  * @constructor
  */
-const Game = () => {
-
-    /**
-     * Shuffle cells from provided level
-     *
-     * @param state
-     */
-    const shuffleLevel = (state) => {
-        resetSelection(state);
-        const newLevel = [...Array(CELLS_COUNT).keys()];
-        newLevel.sort(() => Math.random() - 0.5);
-        for (const [idx, val] of Object.entries(newLevel)) {
-            newLevel[idx] = state[val];
-        }
-        for (const [idx, val] of Object.entries(newLevel)) {
-            state[idx] = state[val];
-        }
-    };
+const Game = ({config, onExit}) => {
 
     /**
      * Reset level selection
@@ -83,7 +75,7 @@ const Game = () => {
      * @param state
      */
     const resetSelection = (state) => {
-        for (const idx of map.keys()) {
+        for (const idx of config.map.keys()) {
             state[idx].cell.selected = false;
         }
         selected.splice(0, selected.length);
@@ -99,7 +91,7 @@ const Game = () => {
      * @returns {*}
      */
     const getCellPos = (x, y) => {
-        return (y * LEVEL_SIZE) + x;
+        return (y * config.LEVEL_SIZE) + x;
     };
 
     /**
@@ -110,10 +102,11 @@ const Game = () => {
      * @returns {null|number}
      */
     const getCellAt = (x, y) => {
+        const size = config.LEVEL_SIZE;
         const col = Math.floor((x - baseX) / cellSize);
         const row = Math.floor((y - baseY) / cellSize);
-        if ((col >= 0) && (col < LEVEL_SIZE) && (row >= 0) && (row < LEVEL_SIZE)) {
-            return (row * LEVEL_SIZE) + col;
+        if ((col >= 0) && (col < size) && (row >= 0) && (row < size)) {
+            return (row * size) + col;
         }
         return null;
     };
@@ -154,13 +147,14 @@ const Game = () => {
             return state;
         }
         touches.filter(x => x.type === "move").forEach(t => {
+            const size = config.LEVEL_SIZE;
             lastCell = getCellAt(t.event.pageX, t.event.pageY);
             if ((firstCell !== null) && (lastCell !== null) && (lastCell !== firstCell)) {
                 if ((state[lastCell].cell.selected !== true) &&
                     ((lastCell === firstCell - 1) ||
                         (lastCell === firstCell + 1) ||
-                        (lastCell === firstCell - LEVEL_SIZE) ||
-                        (lastCell === firstCell + LEVEL_SIZE)) &&
+                        (lastCell === firstCell - size) ||
+                        (lastCell === firstCell + size)) &&
                     (Math.abs(state[lastCell].cell.value - state[firstCell].cell.value) < 2)) {
                     state[lastCell].cell.selected = true;
                     selected.push(lastCell);
@@ -178,7 +172,8 @@ const Game = () => {
      * @param col
      */
     const packColumn = (state, col) => {
-        for (const row of [...Array(LEVEL_SIZE).keys()].reverse()) {
+        const size = config.LEVEL_SIZE;
+        for (const row of [...Array(size).keys()].reverse()) {
             const pos = getCellPos(col, row);
             while (state[pos].cell === null) {
                 for (const idx of [...Array(row+1).keys()].reverse()) {
@@ -191,8 +186,8 @@ const Game = () => {
                             }
                         }
                     } else {
-                        state[target].cell = state[target - LEVEL_SIZE].cell;
-                        state[target - LEVEL_SIZE].cell = null;
+                        state[target].cell = state[target - size].cell;
+                        state[target - size].cell = null;
                     }
                 }
             }
@@ -213,13 +208,14 @@ const Game = () => {
         }
         touches.filter(x => x.type === "end").forEach(t => {
             if (selected.length > 1) {
+                const size = config.LEVEL_SIZE;
                 let delta = 0;
                 for (const [idx, cell] of Object.entries(selected)) {
                     delta += (state[cell].cell.value * (parseInt(idx) + 1));
                     state[cell].cell = null;
                 }
                 setScore(score + delta);
-                for (const col of [...Array(LEVEL_SIZE).keys()]) {
+                for (const col of [...Array(size).keys()]) {
                     packColumn(state, col);
                 }
                 selected.splice(0, selected.length);
@@ -231,7 +227,7 @@ const Game = () => {
     };
 
     /**
-     * Pause or resume game engine
+     * Pause game engine
      */
     const pauseGame = () => {
         timer.pause();
@@ -239,7 +235,7 @@ const Game = () => {
     };
 
     /**
-     * Restart game
+     * Restart paused game
      */
     const resumeGame = () => {
         timer.resume();
@@ -250,6 +246,7 @@ const Game = () => {
      * Current level end
      */
     const endGame = () => {
+        addHighScore(config.size, config.duration, score);
         resetSelection(entities);
         timer.clear();
         setRunningMode(STATES.FINISHED);
@@ -261,9 +258,10 @@ const Game = () => {
      */
     const newGame = () => {
         setScore(0);
+        setRemaining(config.duration);
         timer.clear();
-        level = getLevel();
-        entities = getCells(window, level);
+        level = getLevel(config);
+        entities = getCells(window, level, styles, config);
         resetSelection(entities);
         if (engine.current) {
             engine.current.swap(entities);
@@ -272,64 +270,50 @@ const Game = () => {
         setRunningMode(STATES.RUNNING);
     };
 
+    /**
+     * Exit current game level
+     */
+    const exitGame = () => {
+        setScore(0);
+        timer.clear();
+        level = null;
+        entities = null;
+        setRunningMode(STATES.FINISHED);
+        onExit();
+    };
+
 
     /**
-     * Main component features initialization
+     * Main components features initialization
      */
+
+    const window = useWindowDimensions();
+    const styles = StyleSheet.create(
+        _.merge({}, useContext(StylesContext), {
+            gameOver: {
+                top: (window.height / 2) - 60,
+                left: window.width / 6,
+                width: window.width,
+                fontSize: window.width / 8
+            }
+        })
+    );
+
+    engine = useRef();
+
+    if (level === null) {
+        level = getLevel(config);
+    }
+    if (entities === null) {
+        entities = getCells(window, level, styles, config);
+    }
 
     let [runningMode, setRunningMode] = useState(STATES.RUNNING);
 
-    [score, setScore] = useState(0);
     [remaining, setRemaining] = useState(config.duration);
+    [score, setScore] = useState(0);
 
-    const window = useWindowDimensions();
-    const styles = StyleSheet.create({
-        container: {
-            backgroundColor: "#303030",
-        },
-        timerView: {
-            position: 'absolute',
-            flex: 1,
-            width: '60%',
-            left: 10,
-            bottom: 60
-        },
-        timer: {
-            color: '#fff',
-            fontFamily: 'Syne Mono',
-            fontSize: 16
-        },
-        timerEnding: {
-            color: 'red'
-        },
-        buttonsView: {
-            position: 'absolute',
-            flex: 1,
-            width: '30%',
-            left: window.width - 150,
-            bottom: 50
-        },
-        pauseButton: {},
-        gameOver: {
-            position: 'absolute',
-            left: 50,
-            top: (window.height / 2) - 50,
-            width: window.width,
-            color: '#7bde18',
-            fontSize: 60,
-            fontWeight: 'bold',
-            transform: [{
-                rotate: '-20deg'
-            }]
-        }
-    });
-
-    if (entities === null) {
-        entities = getCells(window, level);
-    }
-
-    engine = useRef();
-    timer = useTimer(endGame, remaining * 1000, setRemaining);
+    timer = useTimer(endGame, config.duration * 1000, remaining * 1000, setRemaining);
 
     switch (runningMode) {
         case STATES.RUNNING:
@@ -346,16 +330,16 @@ const Game = () => {
                                     SelectLastCell
                                 ]}>
                         <Score score={score} />
-                        <View style={styles.timerView}>
-                            <Text style={[
-                                styles.timer,
-                                remaining < 10 ? styles.timerEnding : {}
-                            ]}>Time left: {remaining}</Text>
-                        </View>
+                        <Timer remaining={remaining} />
                         <View style={styles.buttonsView}>
-                            <Button style={styles.pauseButton}
-                                    onPress={pauseGame}
-                                    title="Pause" />
+                            <View style={styles.button}>
+                                <Button onPress={pauseGame}
+                                        title="Pause" />
+                            </View>
+                            <View style={styles.button}>
+                                <Button onPress={exitGame}
+                                        title="Exit" />
+                            </View>
                         </View>
                     </GameEngine>
                 </>
@@ -366,16 +350,16 @@ const Game = () => {
                 <>
                     <StatusBar hidden={true} />
                     <Score score={score} />
-                    <View style={styles.timerView}>
-                        <Text style={[
-                            styles.timer,
-                            remaining < 10 ? styles.timerEnding : {}
-                        ]}>Time left: {remaining}</Text>
-                    </View>
+                    <Timer remaining={remaining} />
                     <View style={styles.buttonsView}>
-                        <Button style={styles.pauseButton}
-                                onPress={resumeGame}
-                                title="Resume" />
+                        <View style={styles.button}>
+                            <Button onPress={resumeGame}
+                                    title="Resume" />
+                        </View>
+                        <View style={styles.button}>
+                            <Button onPress={exitGame}
+                                    title="Exit" />
+                        </View>
                     </View>
                 </>
             );
@@ -391,15 +375,19 @@ const Game = () => {
                         <Score score={score} />
                         <Text style={styles.gameOver}>Game over</Text>
                         <View style={styles.buttonsView}>
-                            <Button style={styles.pauseButton}
-                                    onPress={newGame}
-                                    title="New game" />
+                            <View style={styles.button}>
+                                <Button onPress={newGame}
+                                        title="Replay" />
+                            </View>
+                            <View style={styles.button}>
+                                <Button onPress={exitGame}
+                                        title="Exit" />
+                            </View>
                         </View>
                     </GameEngine>
                 </>
             );
     }
-
 };
 
 export default Game;
